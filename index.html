@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Öine Maantee</title>
+
+<style>
+    html, body {
+        margin: 0;
+        overflow: hidden;
+        background: #000;
+        width: 100%;
+        height: 100%;
+    }
+
+    canvas {
+        display: block;
+    }
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+
+<script>
+const canvas = document.getElementById("scene");
+const ctx = canvas.getContext("2d");
+
+let w, h;
+
+function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+// ------------------------
+// STARS
+// ------------------------
+
+const stars = [];
+
+for (let i = 0; i < 250; i++) {
+    stars.push({
+        x: Math.random() * w,
+        y: Math.random() * h * 0.7,
+        r: Math.random() * 2,
+        a: Math.random(),
+        speed: Math.random() * 0.01
+    });
+}
+
+// ------------------------
+// SHOOTING STARS
+// ------------------------
+
+const shootingStars = [];
+
+function createShootingStar() {
+    shootingStars.push({
+        x: Math.random() * w,
+        y: Math.random() * h * 0.3,
+        len: 200 + Math.random() * 100,
+        speed: 12 + Math.random() * 8,
+        life: 0,
+        maxLife: 60
+    });
+}
+
+setInterval(() => {
+    if (Math.random() > 0.4) createShootingStar();
+}, 2500);
+
+// ------------------------
+// LIGHTNING
+// ------------------------
+
+let lightningTimer = 0;
+let flashAlpha = 0;
+
+function drawLightning() {
+    const startX = Math.random() * w;
+
+    ctx.beginPath();
+    ctx.moveTo(startX, 0);
+
+    let x = startX;
+    let y = 0;
+
+    while (y < h * 0.7) {
+        x += (Math.random() - 0.5) * 40;
+        y += Math.random() * 40;
+
+        ctx.lineTo(x, y);
+    }
+
+    ctx.strokeStyle = "rgba(255,255,255,0.95)";
+    ctx.lineWidth = 3;
+    ctx.shadowBlur = 25;
+    ctx.shadowColor = "#88ccff";
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+
+    flashAlpha = 0.35;
+}
+
+// ------------------------
+// ROAD
+// ------------------------
+
+const cars = [];
+
+for (let i = 0; i < 18; i++) {
+    cars.push({
+        lane: Math.random() > 0.5 ? 1 : -1,
+        z: Math.random(),
+        speed: 0.002 + Math.random() * 0.004,
+        color: Math.random() > 0.5 ? "#ff2222" : "#ffee88"
+    });
+}
+
+// ------------------------
+// DRAW SKY
+// ------------------------
+
+function drawSky() {
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+
+    grad.addColorStop(0, "#02040f");
+    grad.addColorStop(0.5, "#06152c");
+    grad.addColorStop(1, "#0a0a0a");
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // stars
+    stars.forEach(s => {
+        s.a += s.speed;
+
+        const alpha = 0.5 + Math.sin(s.a) * 0.5;
+
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+        ctx.fill();
+    });
+}
+
+// ------------------------
+// DRAW SHOOTING STARS
+// ------------------------
+
+function drawShootingStars() {
+    for (let i = shootingStars.length - 1; i >= 0; i--) {
+        const s = shootingStars[i];
+
+        const x2 = s.x - s.len;
+        const y2 = s.y + s.len * 0.4;
+
+        const grad = ctx.createLinearGradient(s.x, s.y, x2, y2);
+        grad.addColorStop(0, "rgba(255,255,255,1)");
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y);
+        ctx.lineTo(x2, y2);
+
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        s.x -= s.speed;
+        s.y += s.speed * 0.4;
+        s.life++;
+
+        if (s.life > s.maxLife) {
+            shootingStars.splice(i, 1);
+        }
+    }
+}
+
+// ------------------------
+// DRAW ROAD
+// ------------------------
+
+function drawRoad() {
+    const horizon = h * 0.58;
+
+    // road
+    ctx.beginPath();
+    ctx.moveTo(w * 0.35, horizon);
+    ctx.lineTo(w * 0.65, horizon);
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+
+    const roadGrad = ctx.createLinearGradient(0, horizon, 0, h);
+    roadGrad.addColorStop(0, "#222");
+    roadGrad.addColorStop(1, "#050505");
+
+    ctx.fillStyle = roadGrad;
+    ctx.fill();
+
+    // center lines
+    for (let i = 0; i < 20; i++) {
+        const p = i / 20;
+
+        const y = horizon + p * p * (h - horizon);
+
+        const width = 2 + p * 8;
+        const lineHeight = 10 + p * 30;
+
+        ctx.fillStyle = "#ffd94d";
+
+        ctx.fillRect(
+            w / 2 - width / 2,
+            y,
+            width,
+            lineHeight
+        );
+    }
+}
+
+// ------------------------
+// DRAW CARS
+// ------------------------
+
+function drawCars() {
+    const horizon = h * 0.58;
+
+    cars.forEach(car => {
+        car.z += car.speed;
+
+        if (car.z > 1) {
+            car.z = 0;
+            car.lane = Math.random() > 0.5 ? 1 : -1;
+        }
+
+        const z = car.z;
+
+        const y = horizon + z * z * (h - horizon);
+
+        const laneOffset = (w * 0.18) * (1 - z);
+
+        const x = w / 2 + laneOffset * car.lane;
+
+        const size = 2 + z * 18;
+
+        ctx.beginPath();
+
+        ctx.fillStyle = car.color;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = car.color;
+
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // motion blur
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(
+            x,
+            y + size * 6
+        );
+
+        ctx.strokeStyle = car.color;
+        ctx.lineWidth = size * 0.8;
+        ctx.stroke();
+
+        ctx.shadowBlur = 0;
+    });
+}
+
+// ------------------------
+// FLASH
+// ------------------------
+
+function drawFlash() {
+    if (flashAlpha > 0.01) {
+        ctx.fillStyle = `rgba(255,255,255,${flashAlpha})`;
+        ctx.fillRect(0, 0, w, h);
+
+        flashAlpha *= 0.92;
+    }
+}
+
+// ------------------------
+// ANIMATION
+// ------------------------
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    drawSky();
+    drawShootingStars();
+    drawRoad();
+    drawCars();
+
+    // random lightning
+    lightningTimer++;
+
+    if (lightningTimer > 100 + Math.random() * 250) {
+        drawLightning();
+        lightningTimer = 0;
+    }
+
+    drawFlash();
+}
+
+animate();
+</script>
+
+</body>
+</html>
