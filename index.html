@@ -125,17 +125,16 @@ function lightning() {
 // =====================================================
 
 const carColors = [
-    "#ff2d55",
-    "#00e5ff",
-    "#ffd600",
-    "#00ff85",
-    "#ff7b00",
-    "#b026ff"
+    "#ff004c", // neon red
+    "#ff3cac", // pink
+    "#ff1744", // bright red
+    "#ff66cc", // soft pink
+    "#ff006e"  // hot pink
 ];
 
 const cars = [];
 
-for (let i = 0; i < 4; i++) {
+for (let i = 0; i < 5; i++) {
 
     const dir = Math.random() > 0.5 ? 1 : -1;
 
@@ -233,7 +232,7 @@ function drawRoad() {
 
     const roadY = h * 0.72;
 
-    // road gradient
+    // road
 
     const roadGrad = ctx.createLinearGradient(
         0,
@@ -242,8 +241,8 @@ function drawRoad() {
         h
     );
 
-    roadGrad.addColorStop(0, "#2a2a2a");
-    roadGrad.addColorStop(1, "#0b0b0b");
+    roadGrad.addColorStop(0, "#2d2d2d");
+    roadGrad.addColorStop(1, "#0a0a0a");
 
     ctx.fillStyle = roadGrad;
 
@@ -258,31 +257,56 @@ function drawRoad() {
         h
     );
 
-    glow.addColorStop(0, "rgba(0,180,255,0.12)");
+    glow.addColorStop(0, "rgba(255,0,120,0.08)");
     glow.addColorStop(1, "rgba(0,0,0,0)");
 
     ctx.fillStyle = glow;
     ctx.fillRect(0, roadY, w, h);
 
-    // side lights
+    // ROAD EDGES
 
-    for (let x = 0; x < w; x += 80) {
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 4;
+
+    // top edge
+
+    ctx.beginPath();
+    ctx.moveTo(0, roadY + 8);
+    ctx.lineTo(w, roadY + 8);
+    ctx.stroke();
+
+    // bottom edge
+
+    ctx.beginPath();
+    ctx.moveTo(0, h - 8);
+    ctx.lineTo(w, h - 8);
+    ctx.stroke();
+
+    // glowing edge lights
+
+    for (let x = 0; x < w; x += 70) {
 
         ctx.beginPath();
 
-        ctx.arc(x, roadY + 10, 3, 0, Math.PI * 2);
+        ctx.arc(x, roadY + 8, 3, 0, Math.PI * 2);
 
-        ctx.fillStyle = "#66d9ff";
+        ctx.fillStyle = "#ff66cc";
 
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = "#66d9ff";
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = "#ff66cc";
+
+        ctx.fill();
+
+        ctx.beginPath();
+
+        ctx.arc(x, h - 8, 3, 0, Math.PI * 2);
 
         ctx.fill();
     }
 
     ctx.shadowBlur = 0;
 
-    // center lines
+    // center dashed line
 
     ctx.strokeStyle = "#ffd84a";
     ctx.lineWidth = 5;
@@ -319,7 +343,7 @@ function drawCar(car) {
     const y = car.y;
     const s = car.size;
 
-    // body glow
+    // glow
 
     ctx.shadowBlur = 20;
     ctx.shadowColor = car.color;
@@ -350,7 +374,7 @@ function drawCar(car) {
 
     // windows
 
-    ctx.fillStyle = "rgba(180,220,255,0.5)";
+    ctx.fillStyle = "rgba(180,220,255,0.55)";
 
     ctx.fillRect(
         x + 20 * s,
@@ -389,7 +413,7 @@ function drawCar(car) {
 
     } else {
 
-        ctx.fillStyle = "#ff3b3b";
+        ctx.fillStyle = "#ff2a2a";
 
         ctx.fillRect(
             x - 4 * s,
