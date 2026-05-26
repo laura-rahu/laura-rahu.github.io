@@ -9,9 +9,10 @@
     html, body {
         margin: 0;
         overflow: hidden;
-        background: #000;
+        background: black;
         width: 100%;
         height: 100%;
+        font-family: sans-serif;
     }
 
     canvas {
@@ -21,10 +22,10 @@
 </head>
 <body>
 
-<canvas id="scene"></canvas>
+<canvas id="canvas"></canvas>
 
 <script>
-const canvas = document.getElementById("scene");
+const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 let w, h;
@@ -33,285 +34,339 @@ function resize() {
     w = canvas.width = window.innerWidth;
     h = canvas.height = window.innerHeight;
 }
-resize();
 window.addEventListener("resize", resize);
+resize();
 
-// ------------------------
+
+// ======================================================
 // STARS
-// ------------------------
+// ======================================================
 
 const stars = [];
 
-for (let i = 0; i < 250; i++) {
+for (let i = 0; i < 300; i++) {
     stars.push({
         x: Math.random() * w,
         y: Math.random() * h * 0.7,
         r: Math.random() * 2,
-        a: Math.random(),
-        speed: Math.random() * 0.01
+        t: Math.random() * Math.PI * 2
     });
 }
 
-// ------------------------
+
+// ======================================================
 // SHOOTING STARS
-// ------------------------
+// ======================================================
 
-const shootingStars = [];
+const meteors = [];
 
-function createShootingStar() {
-    shootingStars.push({
-        x: Math.random() * w,
+function createMeteor() {
+    meteors.push({
+        x: Math.random() * w + 200,
         y: Math.random() * h * 0.3,
-        len: 200 + Math.random() * 100,
-        speed: 12 + Math.random() * 8,
+        len: 120 + Math.random() * 80,
+        speed: 14 + Math.random() * 8,
         life: 0,
-        maxLife: 60
+        max: 50
     });
 }
 
 setInterval(() => {
-    if (Math.random() > 0.4) createShootingStar();
+    if (Math.random() > 0.4) {
+        createMeteor();
+    }
 }, 2500);
 
-// ------------------------
+
+// ======================================================
 // LIGHTNING
-// ------------------------
+// ======================================================
 
-let lightningTimer = 0;
-let flashAlpha = 0;
+let flash = 0;
 
-function drawLightning() {
-    const startX = Math.random() * w;
+function lightning() {
+
+    let x = Math.random() * w;
 
     ctx.beginPath();
-    ctx.moveTo(startX, 0);
+    ctx.moveTo(x, 0);
 
-    let x = startX;
     let y = 0;
 
-    while (y < h * 0.7) {
+    while (y < h * 0.55) {
+
         x += (Math.random() - 0.5) * 40;
-        y += Math.random() * 40;
+        y += Math.random() * 35;
 
         ctx.lineTo(x, y);
     }
 
     ctx.strokeStyle = "rgba(255,255,255,0.95)";
     ctx.lineWidth = 3;
+
     ctx.shadowBlur = 25;
-    ctx.shadowColor = "#88ccff";
+    ctx.shadowColor = "#9fdfff";
+
     ctx.stroke();
 
     ctx.shadowBlur = 0;
 
-    flashAlpha = 0.35;
+    flash = 0.3;
 }
 
-// ------------------------
-// ROAD
-// ------------------------
+
+// ======================================================
+// CARS
+// ======================================================
 
 const cars = [];
 
-for (let i = 0; i < 18; i++) {
+for (let i = 0; i < 12; i++) {
+
+    const dir = Math.random() > 0.5 ? 1 : -1;
+
     cars.push({
-        lane: Math.random() > 0.5 ? 1 : -1,
-        z: Math.random(),
-        speed: 0.002 + Math.random() * 0.004,
-        color: Math.random() > 0.5 ? "#ff2222" : "#ffee88"
+        x: Math.random() * w,
+        y: h * 0.72 + Math.random() * 80,
+        speed: 3 + Math.random() * 7,
+        dir: dir,
+        color: dir === 1 ? "#ffee88" : "#ff2b2b",
+        size: 0.8 + Math.random() * 0.7
     });
 }
 
-// ------------------------
+
+// ======================================================
 // DRAW SKY
-// ------------------------
+// ======================================================
 
 function drawSky() {
-    const grad = ctx.createLinearGradient(0, 0, 0, h);
 
-    grad.addColorStop(0, "#02040f");
-    grad.addColorStop(0.5, "#06152c");
-    grad.addColorStop(1, "#0a0a0a");
+    const g = ctx.createLinearGradient(0, 0, 0, h);
 
-    ctx.fillStyle = grad;
+    g.addColorStop(0, "#01040d");
+    g.addColorStop(0.4, "#07172d");
+    g.addColorStop(1, "#0a0a0a");
+
+    ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
 
     // stars
-    stars.forEach(s => {
-        s.a += s.speed;
 
-        const alpha = 0.5 + Math.sin(s.a) * 0.5;
+    stars.forEach(s => {
+
+        s.t += 0.02;
+
+        const a = 0.5 + Math.sin(s.t) * 0.5;
 
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
         ctx.fill();
     });
 }
 
-// ------------------------
-// DRAW SHOOTING STARS
-// ------------------------
 
-function drawShootingStars() {
-    for (let i = shootingStars.length - 1; i >= 0; i--) {
-        const s = shootingStars[i];
+// ======================================================
+// DRAW METEORS
+// ======================================================
 
-        const x2 = s.x - s.len;
-        const y2 = s.y + s.len * 0.4;
+function drawMeteors() {
 
-        const grad = ctx.createLinearGradient(s.x, s.y, x2, y2);
-        grad.addColorStop(0, "rgba(255,255,255,1)");
-        grad.addColorStop(1, "rgba(255,255,255,0)");
+    for (let i = meteors.length - 1; i >= 0; i--) {
+
+        const m = meteors[i];
+
+        const x2 = m.x - m.len;
+        const y2 = m.y + m.len * 0.4;
+
+        const g = ctx.createLinearGradient(m.x, m.y, x2, y2);
+
+        g.addColorStop(0, "rgba(255,255,255,1)");
+        g.addColorStop(1, "rgba(255,255,255,0)");
 
         ctx.beginPath();
-        ctx.moveTo(s.x, s.y);
+        ctx.moveTo(m.x, m.y);
         ctx.lineTo(x2, y2);
 
-        ctx.strokeStyle = grad;
+        ctx.strokeStyle = g;
         ctx.lineWidth = 2;
+
         ctx.stroke();
 
-        s.x -= s.speed;
-        s.y += s.speed * 0.4;
-        s.life++;
+        m.x -= m.speed;
+        m.y += m.speed * 0.4;
 
-        if (s.life > s.maxLife) {
-            shootingStars.splice(i, 1);
+        m.life++;
+
+        if (m.life > m.max) {
+            meteors.splice(i, 1);
         }
     }
 }
 
-// ------------------------
+
+// ======================================================
 // DRAW ROAD
-// ------------------------
+// ======================================================
 
 function drawRoad() {
-    const horizon = h * 0.58;
+
+    const roadY = h * 0.7;
 
     // road
+
+    ctx.fillStyle = "#111";
+    ctx.fillRect(0, roadY, w, h - roadY);
+
+    // road glow
+
+    const glow = ctx.createLinearGradient(0, roadY, 0, h);
+
+    glow.addColorStop(0, "rgba(255,255,255,0.03)");
+    glow.addColorStop(1, "rgba(0,0,0,0)");
+
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, roadY, w, h);
+
+    // dashed lines
+
+    ctx.strokeStyle = "#ffd84d";
+    ctx.lineWidth = 4;
+
+    for (let x = 0; x < w; x += 80) {
+
+        ctx.beginPath();
+        ctx.moveTo(x, roadY + 45);
+        ctx.lineTo(x + 40, roadY + 45);
+        ctx.stroke();
+    }
+}
+
+
+// ======================================================
+// DRAW CAR
+// ======================================================
+
+function drawCar(car) {
+
+    const x = car.x;
+    const y = car.y;
+    const s = car.size;
+
+    // movement
+
+    car.x += car.speed * car.dir;
+
+    if (car.dir === 1 && car.x > w + 100) {
+        car.x = -100;
+    }
+
+    if (car.dir === -1 && car.x < -100) {
+        car.x = w + 100;
+    }
+
+    // headlights / taillights glow
+
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = car.color;
+
+    // body
+
+    ctx.fillStyle = "#1a1a1a";
+
     ctx.beginPath();
-    ctx.moveTo(w * 0.35, horizon);
-    ctx.lineTo(w * 0.65, horizon);
-    ctx.lineTo(w, h);
-    ctx.lineTo(0, h);
-    ctx.closePath();
-
-    const roadGrad = ctx.createLinearGradient(0, horizon, 0, h);
-    roadGrad.addColorStop(0, "#222");
-    roadGrad.addColorStop(1, "#050505");
-
-    ctx.fillStyle = roadGrad;
+    ctx.roundRect(x, y, 70 * s, 24 * s, 8);
     ctx.fill();
 
-    // center lines
-    for (let i = 0; i < 20; i++) {
-        const p = i / 20;
+    // top
 
-        const y = horizon + p * p * (h - horizon);
+    ctx.beginPath();
+    ctx.roundRect(x + 15 * s, y - 14 * s, 35 * s, 16 * s, 6);
+    ctx.fill();
 
-        const width = 2 + p * 8;
-        const lineHeight = 10 + p * 30;
+    // wheels
 
-        ctx.fillStyle = "#ffd94d";
+    ctx.shadowBlur = 0;
 
-        ctx.fillRect(
-            w / 2 - width / 2,
-            y,
-            width,
-            lineHeight
-        );
+    ctx.fillStyle = "#000";
+
+    ctx.beginPath();
+    ctx.arc(x + 15 * s, y + 24 * s, 7 * s, 0, Math.PI * 2);
+    ctx.arc(x + 55 * s, y + 24 * s, 7 * s, 0, Math.PI * 2);
+    ctx.fill();
+
+    // lights
+
+    ctx.shadowBlur = 25;
+    ctx.shadowColor = car.color;
+
+    ctx.fillStyle = car.color;
+
+    if (car.dir === 1) {
+
+        // headlights
+
+        ctx.fillRect(x + 66 * s, y + 4 * s, 8 * s, 5 * s);
+
+    } else {
+
+        // taillights
+
+        ctx.fillRect(x - 4 * s, y + 4 * s, 8 * s, 5 * s);
     }
+
+    ctx.shadowBlur = 0;
 }
 
-// ------------------------
-// DRAW CARS
-// ------------------------
 
-function drawCars() {
-    const horizon = h * 0.58;
-
-    cars.forEach(car => {
-        car.z += car.speed;
-
-        if (car.z > 1) {
-            car.z = 0;
-            car.lane = Math.random() > 0.5 ? 1 : -1;
-        }
-
-        const z = car.z;
-
-        const y = horizon + z * z * (h - horizon);
-
-        const laneOffset = (w * 0.18) * (1 - z);
-
-        const x = w / 2 + laneOffset * car.lane;
-
-        const size = 2 + z * 18;
-
-        ctx.beginPath();
-
-        ctx.fillStyle = car.color;
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = car.color;
-
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fill();
-
-        // motion blur
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(
-            x,
-            y + size * 6
-        );
-
-        ctx.strokeStyle = car.color;
-        ctx.lineWidth = size * 0.8;
-        ctx.stroke();
-
-        ctx.shadowBlur = 0;
-    });
-}
-
-// ------------------------
+// ======================================================
 // FLASH
-// ------------------------
+// ======================================================
 
 function drawFlash() {
-    if (flashAlpha > 0.01) {
-        ctx.fillStyle = `rgba(255,255,255,${flashAlpha})`;
+
+    if (flash > 0.01) {
+
+        ctx.fillStyle = `rgba(255,255,255,${flash})`;
         ctx.fillRect(0, 0, w, h);
 
-        flashAlpha *= 0.92;
+        flash *= 0.92;
     }
 }
 
-// ------------------------
+
+// ======================================================
 // ANIMATION
-// ------------------------
+// ======================================================
+
+let timer = 0;
 
 function animate() {
+
     requestAnimationFrame(animate);
 
     drawSky();
-    drawShootingStars();
+
+    drawMeteors();
+
     drawRoad();
-    drawCars();
 
-    // random lightning
-    lightningTimer++;
+    cars.forEach(drawCar);
 
-    if (lightningTimer > 100 + Math.random() * 250) {
-        drawLightning();
-        lightningTimer = 0;
+    timer++;
+
+    if (timer > 120 + Math.random() * 220) {
+        lightning();
+        timer = 0;
     }
 
     drawFlash();
 }
 
 animate();
-</script>
 
+</script>
 </body>
 </html>
