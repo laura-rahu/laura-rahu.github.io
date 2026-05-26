@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Neoontuledes Öine Maantee</title>
+<title>Äikeseline Öine Maantee</title>
 
 <style>
     html, body {
@@ -76,15 +76,15 @@ function createMeteor() {
 
 setInterval(() => {
 
-    if (Math.random() > 0.45) {
+    if (Math.random() > 0.5) {
         createMeteor();
     }
 
-}, 3000);
+}, 2800);
 
 
 // =====================================================
-// LIGHTNING
+// LIGHTNING (ROHKEM ÄIKEST)
 // =====================================================
 
 let flash = 0;
@@ -100,8 +100,8 @@ function lightning() {
 
     while (y < h * 0.6) {
 
-        x += (Math.random() - 0.5) * 45;
-        y += Math.random() * 35;
+        x += (Math.random() - 0.5) * 50;
+        y += Math.random() * 30;
 
         ctx.lineTo(x, y);
     }
@@ -109,27 +109,49 @@ function lightning() {
     ctx.strokeStyle = "rgba(255,255,255,0.95)";
     ctx.lineWidth = 3;
 
-    ctx.shadowBlur = 30;
-    ctx.shadowColor = "#b6eeff";
+    ctx.shadowBlur = 35;
+    ctx.shadowColor = "#bdefff";
 
     ctx.stroke();
 
+    // teine haru välgule
+
+    if (Math.random() > 0.4) {
+
+        ctx.beginPath();
+
+        let bx = x;
+        let by = y * 0.5;
+
+        ctx.moveTo(bx, by);
+
+        while (by < h * 0.6) {
+
+            bx += (Math.random() - 0.5) * 40;
+            by += Math.random() * 25;
+
+            ctx.lineTo(bx, by);
+        }
+
+        ctx.stroke();
+    }
+
     ctx.shadowBlur = 0;
 
-    flash = 0.35;
+    flash = 0.4;
 }
 
 
 // =====================================================
-// CARS
+// AUTOD (VÄHEM NEONIT)
 // =====================================================
 
 const carColors = [
-    "#ff004c", // neon red
-    "#ff3cac", // pink
-    "#ff1744", // bright red
-    "#ff66cc", // soft pink
-    "#ff006e"  // hot pink
+    "#d62828", // tumepunane
+    "#ff4d6d", // roosa
+    "#b0b0b0", // hall
+    "#ffffff", // valge
+    "#3a86ff"  // sinine
 ];
 
 const cars = [];
@@ -232,8 +254,6 @@ function drawRoad() {
 
     const roadY = h * 0.72;
 
-    // road
-
     const roadGrad = ctx.createLinearGradient(
         0,
         roadY,
@@ -248,7 +268,7 @@ function drawRoad() {
 
     ctx.fillRect(0, roadY, w, h - roadY);
 
-    // road glow
+    // glow
 
     const glow = ctx.createLinearGradient(
         0,
@@ -257,32 +277,28 @@ function drawRoad() {
         h
     );
 
-    glow.addColorStop(0, "rgba(255,0,120,0.08)");
+    glow.addColorStop(0, "rgba(255,255,255,0.04)");
     glow.addColorStop(1, "rgba(0,0,0,0)");
 
     ctx.fillStyle = glow;
     ctx.fillRect(0, roadY, w, h);
 
-    // ROAD EDGES
+    // road edges
 
     ctx.strokeStyle = "#ffffff";
     ctx.lineWidth = 4;
-
-    // top edge
 
     ctx.beginPath();
     ctx.moveTo(0, roadY + 8);
     ctx.lineTo(w, roadY + 8);
     ctx.stroke();
 
-    // bottom edge
-
     ctx.beginPath();
     ctx.moveTo(0, h - 8);
     ctx.lineTo(w, h - 8);
     ctx.stroke();
 
-    // glowing edge lights
+    // edge lights
 
     for (let x = 0; x < w; x += 70) {
 
@@ -290,10 +306,10 @@ function drawRoad() {
 
         ctx.arc(x, roadY + 8, 3, 0, Math.PI * 2);
 
-        ctx.fillStyle = "#ff66cc";
+        ctx.fillStyle = "#ffffff";
 
-        ctx.shadowBlur = 18;
-        ctx.shadowColor = "#ff66cc";
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = "#ffffff";
 
         ctx.fill();
 
@@ -306,7 +322,7 @@ function drawRoad() {
 
     ctx.shadowBlur = 0;
 
-    // center dashed line
+    // middle dashed line
 
     ctx.strokeStyle = "#ffd84a";
     ctx.lineWidth = 5;
@@ -345,7 +361,7 @@ function drawCar(car) {
 
     // glow
 
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 15;
     ctx.shadowColor = car.color;
 
     // body
@@ -358,7 +374,7 @@ function drawCar(car) {
 
     // roof
 
-    ctx.fillStyle = lightenColor(car.color, 40);
+    ctx.fillStyle = lightenColor(car.color, 25);
 
     ctx.beginPath();
 
@@ -374,7 +390,7 @@ function drawCar(car) {
 
     // windows
 
-    ctx.fillStyle = "rgba(180,220,255,0.55)";
+    ctx.fillStyle = "rgba(180,220,255,0.5)";
 
     ctx.fillRect(
         x + 20 * s,
@@ -396,9 +412,9 @@ function drawCar(car) {
 
     ctx.fill();
 
-    // headlights
+    // lights
 
-    ctx.shadowBlur = 25;
+    ctx.shadowBlur = 20;
 
     if (car.dir === 1) {
 
@@ -459,7 +475,7 @@ function drawFlash() {
 
         ctx.fillRect(0, 0, w, h);
 
-        flash *= 0.92;
+        flash *= 0.9;
     }
 }
 
@@ -484,9 +500,20 @@ function animate() {
 
     timer++;
 
-    if (timer > 140 + Math.random() * 260) {
+    // rohkem välku
+
+    if (timer > 70 + Math.random() * 120) {
 
         lightning();
+
+        // vahel topeltvälk
+
+        if (Math.random() > 0.5) {
+
+            setTimeout(() => {
+                lightning();
+            }, 120);
+        }
 
         timer = 0;
     }
