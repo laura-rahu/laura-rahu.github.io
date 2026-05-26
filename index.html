@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Öine Maantee</title>
+<title>Neoontuledes Öine Maantee</title>
 
 <style>
     html, body {
@@ -66,7 +66,7 @@ function createMeteor() {
 
     meteors.push({
         x: Math.random() * w + 200,
-        y: Math.random() * h * 0.3,
+        y: Math.random() * h * 0.25,
         len: 140 + Math.random() * 80,
         speed: 12 + Math.random() * 6,
         life: 0,
@@ -98,7 +98,7 @@ function lightning() {
 
     let y = 0;
 
-    while (y < h * 0.55) {
+    while (y < h * 0.6) {
 
         x += (Math.random() - 0.5) * 45;
         y += Math.random() * 35;
@@ -109,20 +109,29 @@ function lightning() {
     ctx.strokeStyle = "rgba(255,255,255,0.95)";
     ctx.lineWidth = 3;
 
-    ctx.shadowBlur = 25;
-    ctx.shadowColor = "#aee8ff";
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = "#b6eeff";
 
     ctx.stroke();
 
     ctx.shadowBlur = 0;
 
-    flash = 0.3;
+    flash = 0.35;
 }
 
 
 // =====================================================
-// CARS (VÄHEM AUTOSID)
+// CARS
 // =====================================================
+
+const carColors = [
+    "#ff2d55",
+    "#00e5ff",
+    "#ffd600",
+    "#00ff85",
+    "#ff7b00",
+    "#b026ff"
+];
 
 const cars = [];
 
@@ -135,28 +144,26 @@ for (let i = 0; i < 4; i++) {
         y: h * 0.72 + Math.random() * 70,
         speed: 2 + Math.random() * 4,
         dir: dir,
-        color: dir === 1 ? "#ffee88" : "#ff2a2a",
+        color: carColors[Math.floor(Math.random() * carColors.length)],
         size: 0.9 + Math.random() * 0.4
     });
 }
 
 
 // =====================================================
-// DRAW SKY
+// SKY
 // =====================================================
 
 function drawSky() {
 
     const g = ctx.createLinearGradient(0, 0, 0, h);
 
-    g.addColorStop(0, "#01040d");
-    g.addColorStop(0.45, "#07182f");
-    g.addColorStop(1, "#090909");
+    g.addColorStop(0, "#020611");
+    g.addColorStop(0.4, "#0b2040");
+    g.addColorStop(1, "#101010");
 
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
-
-    // stars
 
     stars.forEach(star => {
 
@@ -176,7 +183,7 @@ function drawSky() {
 
 
 // =====================================================
-// DRAW METEORS
+// METEORS
 // =====================================================
 
 function drawMeteors() {
@@ -219,19 +226,30 @@ function drawMeteors() {
 
 
 // =====================================================
-// DRAW ROAD
+// ROAD
 // =====================================================
 
 function drawRoad() {
 
     const roadY = h * 0.72;
 
-    // road
+    // road gradient
 
-    ctx.fillStyle = "#101010";
+    const roadGrad = ctx.createLinearGradient(
+        0,
+        roadY,
+        0,
+        h
+    );
+
+    roadGrad.addColorStop(0, "#2a2a2a");
+    roadGrad.addColorStop(1, "#0b0b0b");
+
+    ctx.fillStyle = roadGrad;
+
     ctx.fillRect(0, roadY, w, h - roadY);
 
-    // glow
+    // road glow
 
     const glow = ctx.createLinearGradient(
         0,
@@ -240,16 +258,34 @@ function drawRoad() {
         h
     );
 
-    glow.addColorStop(0, "rgba(255,255,255,0.03)");
+    glow.addColorStop(0, "rgba(0,180,255,0.12)");
     glow.addColorStop(1, "rgba(0,0,0,0)");
 
     ctx.fillStyle = glow;
     ctx.fillRect(0, roadY, w, h);
 
-    // middle lines
+    // side lights
+
+    for (let x = 0; x < w; x += 80) {
+
+        ctx.beginPath();
+
+        ctx.arc(x, roadY + 10, 3, 0, Math.PI * 2);
+
+        ctx.fillStyle = "#66d9ff";
+
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = "#66d9ff";
+
+        ctx.fill();
+    }
+
+    ctx.shadowBlur = 0;
+
+    // center lines
 
     ctx.strokeStyle = "#ffd84a";
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 5;
 
     for (let x = 0; x < w; x += 90) {
 
@@ -264,7 +300,7 @@ function drawRoad() {
 
 
 // =====================================================
-// DRAW CAR
+// CAR
 // =====================================================
 
 function drawCar(car) {
@@ -283,17 +319,25 @@ function drawCar(car) {
     const y = car.y;
     const s = car.size;
 
+    // body glow
+
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = car.color;
+
     // body
 
-    ctx.fillStyle = "#1a1a1a";
+    ctx.fillStyle = car.color;
 
     ctx.beginPath();
     ctx.roundRect(x, y, 75 * s, 24 * s, 8);
     ctx.fill();
 
-    // top
+    // roof
+
+    ctx.fillStyle = lightenColor(car.color, 40);
 
     ctx.beginPath();
+
     ctx.roundRect(
         x + 15 * s,
         y - 13 * s,
@@ -304,9 +348,22 @@ function drawCar(car) {
 
     ctx.fill();
 
+    // windows
+
+    ctx.fillStyle = "rgba(180,220,255,0.5)";
+
+    ctx.fillRect(
+        x + 20 * s,
+        y - 8 * s,
+        30 * s,
+        10 * s
+    );
+
     // wheels
 
-    ctx.fillStyle = "#000";
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = "#111";
 
     ctx.beginPath();
 
@@ -315,16 +372,13 @@ function drawCar(car) {
 
     ctx.fill();
 
-    // lights
+    // headlights
 
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = car.color;
-
-    ctx.fillStyle = car.color;
+    ctx.shadowBlur = 25;
 
     if (car.dir === 1) {
 
-        // headlights
+        ctx.fillStyle = "#fff4aa";
 
         ctx.fillRect(
             x + 72 * s,
@@ -335,7 +389,7 @@ function drawCar(car) {
 
     } else {
 
-        // taillights
+        ctx.fillStyle = "#ff3b3b";
 
         ctx.fillRect(
             x - 4 * s,
@@ -346,6 +400,26 @@ function drawCar(car) {
     }
 
     ctx.shadowBlur = 0;
+}
+
+
+// =====================================================
+// COLOR HELPER
+// =====================================================
+
+function lightenColor(color, percent) {
+
+    const num = parseInt(color.replace("#",""),16);
+
+    let r = (num >> 16) + percent;
+    let g = ((num >> 8) & 0x00FF) + percent;
+    let b = (num & 0x0000FF) + percent;
+
+    r = r < 255 ? r : 255;
+    g = g < 255 ? g : 255;
+    b = b < 255 ? b : 255;
+
+    return `rgb(${r},${g},${b})`;
 }
 
 
@@ -367,7 +441,7 @@ function drawFlash() {
 
 
 // =====================================================
-// MAIN ANIMATION
+// ANIMATION
 // =====================================================
 
 let timer = 0;
@@ -385,8 +459,6 @@ function animate() {
     cars.forEach(drawCar);
 
     timer++;
-
-    // random lightning
 
     if (timer > 140 + Math.random() * 260) {
 
