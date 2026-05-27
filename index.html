@@ -45,7 +45,7 @@ body{
     pointer-events:none;
 }
 
-/* WHITE SCREEN AREA */
+/* SCREEN */
 .screen{
     position:absolute;
     top:78px;
@@ -56,87 +56,95 @@ body{
     color:black;
 }
 
-/* SONG NAME */
+/* SONG */
 .song{
-    font-size:17px;
+    font-size:16px;
     font-weight:bold;
     text-align:left;
-    margin-bottom:3px;
+    margin-bottom:2px;
 }
 
 /* ARTIST */
 .artist{
     font-size:13px;
     text-align:left;
-    margin-bottom:12px;
     color:#444;
 }
 
-/* TIMELINE */
+/* CENTER THE LINE */
+.timeline-area{
+    position:absolute;
+    left:0;
+    top:48px;
+    width:100%;
+}
+
+/* PROGRESS BAR */
 .progress-container{
     width:100%;
     height:8px;
-    background:#555;
+    background:#666;
     border-radius:20px;
     overflow:hidden;
+    cursor:pointer;
+
     box-shadow:
-        inset 2px 2px 4px rgba(0,0,0,0.6),
-        inset -1px -1px 2px rgba(255,255,255,0.15);
+        inset 2px 2px 4px rgba(0,0,0,0.7),
+        inset -1px -1px 2px rgba(255,255,255,0.2);
 }
 
 .progress{
     width:0%;
     height:100%;
     background:black;
-    transition:width 0.1s linear;
 }
 
-/* TIME */
+/* TIMES */
 .time-row{
     margin-top:4px;
     display:flex;
     justify-content:space-between;
-    font-size:12px;
+    font-size:11px;
     color:black;
 }
 
-/* INVISIBLE BUTTONS ON TOP OF REAL BLACK BUTTONS */
-.controls button{
+/* REAL BUTTON HITBOXES */
+.btn{
     position:absolute;
     border:none;
     background:transparent;
     cursor:pointer;
     border-radius:50%;
+    z-index:999;
 }
 
-/* BEVELED FEEL */
-.controls button:active{
+/* PRESS EFFECT */
+.btn:active{
     transform:translateY(2px);
-    filter:brightness(0.8);
 }
 
-/* BACK BUTTON */
+/* LEFT BUTTON */
 #backBtn{
-    width:56px;
-    height:56px;
-    left:98px;
-    bottom:46px;
-}
-
-/* PLAY BUTTON */
-#playBtn{
-    width:68px;
-    height:68px;
-    left:198px;
+    width:62px;
+    height:62px;
+    left:88px;
     bottom:40px;
 }
 
-/* FORWARD BUTTON */
+/* CENTER BUTTON */
+#playBtn{
+    width:76px;
+    height:76px;
+    left:196px;
+    bottom:34px;
+}
+
+/* RIGHT BUTTON */
 #forwardBtn{
-    width:56px;
-    height:56px;
-    right:100px;
-    bottom:46px;
+    width:62px;
+    height:62px;
+    right:88px;
+    bottom:40px;
 }
 
 </style>
@@ -146,7 +154,7 @@ body{
 
 <div class="player">
 
-    <!-- MP3 PLAYER IMAGE -->
+    <!-- PLAYER IMAGE -->
     <img src="picne.mp3player.png" alt="MP3 Player">
 
     <!-- SCREEN -->
@@ -160,33 +168,34 @@ body{
             Rascal Flatts
         </div>
 
-        <div class="progress-container" id="progressContainer">
-            <div class="progress" id="progress"></div>
-        </div>
+        <!-- CENTERED TIMELINE -->
+        <div class="timeline-area">
 
-        <div class="time-row">
-            <span id="currentTime">0:00</span>
-            <span id="remainingTime">-0:00</span>
+            <div class="progress-container" id="progressContainer">
+                <div class="progress" id="progress"></div>
+            </div>
+
+            <div class="time-row">
+                <span id="currentTime">0:00</span>
+                <span id="remainingTime">-0:00</span>
+            </div>
+
         </div>
 
     </div>
 
-    <!-- CLICK AREAS -->
-    <div class="controls">
+    <!-- BUTTON AREAS -->
+    <button class="btn" id="backBtn"></button>
 
-        <button id="backBtn"></button>
+    <button class="btn" id="playBtn"></button>
 
-        <button id="playBtn"></button>
-
-        <button id="forwardBtn"></button>
-
-    </div>
+    <button class="btn" id="forwardBtn"></button>
 
 </div>
 
 <!-- AUDIO -->
 <audio id="audio">
-    <source src="Cars (Soundtrack) - Life Is A Highway.mp3" type="audio/mp3">
+    <source src="Cars (Soundtrack) - Life Is A Highway.mp3" type="audio/mpeg">
 </audio>
 
 <script>
@@ -208,10 +217,12 @@ let isPlaying = false;
 /* FORMAT TIME */
 function formatTime(seconds){
 
+    if(isNaN(seconds)) return "0:00";
+
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
 
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+    return mins + ":" + (secs < 10 ? "0" : "") + secs;
 }
 
 /* PLAY / PAUSE */
@@ -229,19 +240,22 @@ playBtn.addEventListener("click", () => {
     isPlaying = !isPlaying;
 });
 
-/* BACK 15s */
+/* BACK 15 SEC */
 backBtn.addEventListener("click", () => {
 
-    audio.currentTime -= 15;
+    audio.currentTime = Math.max(0, audio.currentTime - 15);
 });
 
-/* FORWARD 15s */
+/* FORWARD 15 SEC */
 forwardBtn.addEventListener("click", () => {
 
-    audio.currentTime += 15;
+    audio.currentTime = Math.min(
+        audio.duration,
+        audio.currentTime + 15
+    );
 });
 
-/* UPDATE PROGRESS */
+/* UPDATE TIMELINE */
 audio.addEventListener("timeupdate", () => {
 
     const current = audio.currentTime;
@@ -255,7 +269,8 @@ audio.addEventListener("timeupdate", () => {
 
     const remaining = duration - current;
 
-    remainingTimeEl.textContent = "-" + formatTime(remaining);
+    remainingTimeEl.textContent =
+        "-" + formatTime(remaining);
 });
 
 /* CLICK TIMELINE */
@@ -270,7 +285,7 @@ progressContainer.addEventListener("click", (e) => {
     audio.currentTime = (clickX / width) * duration;
 });
 
-/* SONG END */
+/* SONG ENDED */
 audio.addEventListener("ended", () => {
 
     isPlaying = false;
