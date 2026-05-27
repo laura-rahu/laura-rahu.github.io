@@ -1,264 +1,527 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="et">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cars Soundtrack Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Äikeseline Öine Maantee</title>
 
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
+    html, body {
+        margin: 0;
+        overflow: hidden;
+        background: black;
+        width: 100%;
+        height: 100%;
+    }
 
-body{
-width:100vw;
-height:100vh;
-overflow:hidden;
-font-family:Arial, Helvetica, sans-serif;
-
-/* FULLSCREEN WALLPAPER */
-background:url("index.html") center center/cover no-repeat fixed;
-display:flex;
-justify-content:center;
-align-items:center;
-}
-
-/* MP3 PLAYER IMAGE */
-.player-wrapper{
-position:relative;
-width:420px;
-max-width:90vw;
-}
-
-.player-image{
-width:100%;
-display:block;
-user-select:none;
-pointer-events:none;
-}
-
-/* SCREEN AREA */
-.screen{
-position:absolute;
-top:70px;
-left:60px;
-width:300px;
-height:120px;
-color:white;
-text-align:center;
-}
-
-.song-title{
-font-size:22px;
-font-weight:bold;
-margin-top:5px;
-text-shadow:0 0 5px black;
-}
-
-.artist{
-font-size:14px;
-color:#d9d9d9;
-margin-top:6px;
-margin-bottom:18px;
-text-shadow:0 0 5px black;
-}
-
-/* PROGRESS BAR */
-.progress-container{
-width:100%;
-height:10px;
-background:rgba(255,255,255,0.2);
-border-radius:10px;
-overflow:hidden;
-cursor:pointer;
-}
-
-.progress{
-width:0%;
-height:100%;
-background:#00ffae;
-transition:width 0.1s linear;
-}
-
-.time-row{
-display:flex;
-justify-content:space-between;
-margin-top:8px;
-font-size:13px;
-color:white;
-text-shadow:0 0 4px black;
-}
-
-/* BUTTONS */
-.controls{
-position:absolute;
-bottom:35px;
-left:50%;
-transform:translateX(-50%);
-display:flex;
-gap:18px;
-}
-
-.btn{
-width:58px;
-height:58px;
-border-radius:50%;
-border:none;
-cursor:pointer;
-background:rgba(255,255,255,0.15);
-color:white;
-font-size:22px;
-backdrop-filter:blur(4px);
-transition:0.2s;
-}
-
-.btn:hover{
-transform:scale(1.08);
-background:rgba(255,255,255,0.3);
-}
-
-.btn:active{
-transform:scale(0.95);
-}
+    canvas {
+        display: block;
+    }
 </style>
 </head>
-
 <body>
 
-<div class="player-wrapper">
-
-<!-- MP3 PLAYER IMAGE -->
-<img src="picne.mp3player.png" class="player-image" alt="MP3 Player">
-
-<!-- SCREEN -->
-<div class="screen">
-
-<div class="song-title">
-Life is a Highway
-</div>
-
-<div class="artist">
-Rascal Flatts
-</div>
-
-<div class="progress-container" id="progressContainer">
-<div class="progress" id="progress"></div>
-</div>
-
-<div class="time-row">
-<span id="currentTime">0:00</span>
-<span id="remainingTime">-0:00</span>
-</div>
-
-</div>
-
-<!-- CONTROLS -->
-<div class="controls">
-
-<!-- 15s BACK -->
-<button class="btn" id="backBtn">
-⏪
-</button>
-
-<!-- PLAY / PAUSE -->
-<button class="btn" id="playBtn">
-▶
-</button>
-
-<!-- 15s FORWARD -->
-<button class="btn" id="forwardBtn">
-⏩
-</button>
-
-</div>
-
-</div>
-
-<!-- AUDIO -->
-<audio id="audio">
-<source src="Cars (Soundtrack) - Life Is A Highway.mp3" type="audio/mpeg">
-</audio>
+<canvas id="canvas"></canvas>
 
 <script>
-const audio = document.getElementById("audio");
 
-const playBtn = document.getElementById("playBtn");
-const backBtn = document.getElementById("backBtn");
-const forwardBtn = document.getElementById("forwardBtn");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
-const progress = document.getElementById("progress");
-const progressContainer = document.getElementById("progressContainer");
+let w, h;
 
-const currentTimeEl = document.getElementById("currentTime");
-const remainingTimeEl = document.getElementById("remainingTime");
-
-let isPlaying = false;
-
-// FORMAT TIME
-function formatTime(seconds){
-const mins = Math.floor(seconds / 60);
-const secs = Math.floor(seconds % 60);
-
-return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
 }
 
-// PLAY / PAUSE
-playBtn.addEventListener("click", () => {
+window.addEventListener("resize", resize);
+resize();
 
-if(isPlaying){
-audio.pause();
-playBtn.innerHTML = "▶";
-} else {
-audio.play();
-playBtn.innerHTML = "⏸";
+
+// =====================================================
+// STARS
+// =====================================================
+
+const stars = [];
+
+for (let i = 0; i < 250; i++) {
+
+    stars.push({
+        x: Math.random() * w,
+        y: Math.random() * h * 0.7,
+        r: Math.random() * 2,
+        t: Math.random() * Math.PI * 2
+    });
 }
 
-isPlaying = !isPlaying;
-});
 
-// BACK 15 SEC
-backBtn.addEventListener("click", () => {
-audio.currentTime -= 15;
-});
+// =====================================================
+// SHOOTING STARS
+// =====================================================
 
-// FORWARD 15 SEC
-forwardBtn.addEventListener("click", () => {
-audio.currentTime += 15;
-});
+const meteors = [];
 
-// UPDATE PROGRESS
-audio.addEventListener("timeupdate", () => {
+function createMeteor() {
 
-const current = audio.currentTime;
-const duration = audio.duration || 0;
+    meteors.push({
+        x: Math.random() * w + 200,
+        y: Math.random() * h * 0.25,
+        len: 140 + Math.random() * 80,
+        speed: 12 + Math.random() * 6,
+        life: 0,
+        max: 55
+    });
+}
 
-const progressPercent = (current / duration) * 100;
-progress.style.width = progressPercent + "%";
+setInterval(() => {
 
-currentTimeEl.textContent = formatTime(current);
+    if (Math.random() > 0.5) {
+        createMeteor();
+    }
 
-const remaining = duration - current;
-remainingTimeEl.textContent = "-" + formatTime(remaining);
+}, 2800);
 
-});
 
-// CLICK ON TIMELINE
-progressContainer.addEventListener("click", (e) => {
+// =====================================================
+// LIGHTNING (ROHKEM ÄIKEST)
+// =====================================================
 
-const width = progressContainer.clientWidth;
-const clickX = e.offsetX;
-const duration = audio.duration;
+let flash = 0;
 
-audio.currentTime = (clickX / width) * duration;
-});
+function lightning() {
 
-// SONG ENDED
-audio.addEventListener("ended", () => {
-playBtn.innerHTML = "▶";
-isPlaying = false;
-});
+    let x = Math.random() * w;
+
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+
+    let y = 0;
+
+    while (y < h * 0.6) {
+
+        x += (Math.random() - 0.5) * 50;
+        y += Math.random() * 30;
+
+        ctx.lineTo(x, y);
+    }
+
+    ctx.strokeStyle = "rgba(255,255,255,0.95)";
+    ctx.lineWidth = 3;
+
+    ctx.shadowBlur = 35;
+    ctx.shadowColor = "#bdefff";
+
+    ctx.stroke();
+
+    // teine haru välgule
+
+    if (Math.random() > 0.4) {
+
+        ctx.beginPath();
+
+        let bx = x;
+        let by = y * 0.5;
+
+        ctx.moveTo(bx, by);
+
+        while (by < h * 0.6) {
+
+            bx += (Math.random() - 0.5) * 40;
+            by += Math.random() * 25;
+
+            ctx.lineTo(bx, by);
+        }
+
+        ctx.stroke();
+    }
+
+    ctx.shadowBlur = 0;
+
+    flash = 0.4;
+}
+
+
+// =====================================================
+// AUTOD (VÄHEM NEONIT)
+// =====================================================
+
+const carColors = [
+    "#d62828", // tumepunane
+    "#ff4d6d", // roosa
+    "#b0b0b0", // hall
+    "#ffffff", // valge
+    "#3a86ff"  // sinine
+];
+
+const cars = [];
+
+for (let i = 0; i < 5; i++) {
+
+    const dir = Math.random() > 0.5 ? 1 : -1;
+
+    cars.push({
+        x: Math.random() * w,
+        y: h * 0.72 + Math.random() * 70,
+        speed: 2 + Math.random() * 4,
+        dir: dir,
+        color: carColors[Math.floor(Math.random() * carColors.length)],
+        size: 0.9 + Math.random() * 0.4
+    });
+}
+
+
+// =====================================================
+// SKY
+// =====================================================
+
+function drawSky() {
+
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+
+    g.addColorStop(0, "#020611");
+    g.addColorStop(0.4, "#0b2040");
+    g.addColorStop(1, "#101010");
+
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+
+    stars.forEach(star => {
+
+        star.t += 0.02;
+
+        const alpha = 0.5 + Math.sin(star.t) * 0.5;
+
+        ctx.beginPath();
+
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+
+        ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+
+        ctx.fill();
+    });
+}
+
+
+// =====================================================
+// METEORS
+// =====================================================
+
+function drawMeteors() {
+
+    for (let i = meteors.length - 1; i >= 0; i--) {
+
+        const m = meteors[i];
+
+        const x2 = m.x - m.len;
+        const y2 = m.y + m.len * 0.4;
+
+        const grad = ctx.createLinearGradient(
+            m.x, m.y,
+            x2, y2
+        );
+
+        grad.addColorStop(0, "rgba(255,255,255,1)");
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+
+        ctx.beginPath();
+
+        ctx.moveTo(m.x, m.y);
+        ctx.lineTo(x2, y2);
+
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 2;
+
+        ctx.stroke();
+
+        m.x -= m.speed;
+        m.y += m.speed * 0.4;
+
+        m.life++;
+
+        if (m.life > m.max) {
+            meteors.splice(i, 1);
+        }
+    }
+}
+
+
+// =====================================================
+// ROAD
+// =====================================================
+
+function drawRoad() {
+
+    const roadY = h * 0.72;
+
+    const roadGrad = ctx.createLinearGradient(
+        0,
+        roadY,
+        0,
+        h
+    );
+
+    roadGrad.addColorStop(0, "#2d2d2d");
+    roadGrad.addColorStop(1, "#0a0a0a");
+
+    ctx.fillStyle = roadGrad;
+
+    ctx.fillRect(0, roadY, w, h - roadY);
+
+    // glow
+
+    const glow = ctx.createLinearGradient(
+        0,
+        roadY,
+        0,
+        h
+    );
+
+    glow.addColorStop(0, "rgba(255,255,255,0.04)");
+    glow.addColorStop(1, "rgba(0,0,0,0)");
+
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, roadY, w, h);
+
+    // road edges
+
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 4;
+
+    ctx.beginPath();
+    ctx.moveTo(0, roadY + 8);
+    ctx.lineTo(w, roadY + 8);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0, h - 8);
+    ctx.lineTo(w, h - 8);
+    ctx.stroke();
+
+    // edge lights
+
+    for (let x = 0; x < w; x += 70) {
+
+        ctx.beginPath();
+
+        ctx.arc(x, roadY + 8, 3, 0, Math.PI * 2);
+
+        ctx.fillStyle = "#ffffff";
+
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = "#ffffff";
+
+        ctx.fill();
+
+        ctx.beginPath();
+
+        ctx.arc(x, h - 8, 3, 0, Math.PI * 2);
+
+        ctx.fill();
+    }
+
+    ctx.shadowBlur = 0;
+
+    // middle dashed line
+
+    ctx.strokeStyle = "#ffd84a";
+    ctx.lineWidth = 5;
+
+    for (let x = 0; x < w; x += 90) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(x, roadY + 42);
+        ctx.lineTo(x + 45, roadY + 42);
+
+        ctx.stroke();
+    }
+}
+
+
+// =====================================================
+// CAR
+// =====================================================
+
+function drawCar(car) {
+
+    car.x += car.speed * car.dir;
+
+    if (car.dir === 1 && car.x > w + 120) {
+        car.x = -120;
+    }
+
+    if (car.dir === -1 && car.x < -120) {
+        car.x = w + 120;
+    }
+
+    const x = car.x;
+    const y = car.y;
+    const s = car.size;
+
+    // glow
+
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = car.color;
+
+    // body
+
+    ctx.fillStyle = car.color;
+
+    ctx.beginPath();
+    ctx.roundRect(x, y, 75 * s, 24 * s, 8);
+    ctx.fill();
+
+    // roof
+
+    ctx.fillStyle = lightenColor(car.color, 25);
+
+    ctx.beginPath();
+
+    ctx.roundRect(
+        x + 15 * s,
+        y - 13 * s,
+        40 * s,
+        16 * s,
+        6
+    );
+
+    ctx.fill();
+
+    // windows
+
+    ctx.fillStyle = "rgba(180,220,255,0.5)";
+
+    ctx.fillRect(
+        x + 20 * s,
+        y - 8 * s,
+        30 * s,
+        10 * s
+    );
+
+    // wheels
+
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = "#111";
+
+    ctx.beginPath();
+
+    ctx.arc(x + 15 * s, y + 24 * s, 7 * s, 0, Math.PI * 2);
+    ctx.arc(x + 58 * s, y + 24 * s, 7 * s, 0, Math.PI * 2);
+
+    ctx.fill();
+
+    // lights
+
+    ctx.shadowBlur = 20;
+
+    if (car.dir === 1) {
+
+        ctx.fillStyle = "#fff4aa";
+
+        ctx.fillRect(
+            x + 72 * s,
+            y + 5 * s,
+            7 * s,
+            5 * s
+        );
+
+    } else {
+
+        ctx.fillStyle = "#ff2a2a";
+
+        ctx.fillRect(
+            x - 4 * s,
+            y + 5 * s,
+            7 * s,
+            5 * s
+        );
+    }
+
+    ctx.shadowBlur = 0;
+}
+
+
+// =====================================================
+// COLOR HELPER
+// =====================================================
+
+function lightenColor(color, percent) {
+
+    const num = parseInt(color.replace("#",""),16);
+
+    let r = (num >> 16) + percent;
+    let g = ((num >> 8) & 0x00FF) + percent;
+    let b = (num & 0x0000FF) + percent;
+
+    r = r < 255 ? r : 255;
+    g = g < 255 ? g : 255;
+    b = b < 255 ? b : 255;
+
+    return `rgb(${r},${g},${b})`;
+}
+
+
+// =====================================================
+// FLASH
+// =====================================================
+
+function drawFlash() {
+
+    if (flash > 0.01) {
+
+        ctx.fillStyle = `rgba(255,255,255,${flash})`;
+
+        ctx.fillRect(0, 0, w, h);
+
+        flash *= 0.9;
+    }
+}
+
+
+// =====================================================
+// ANIMATION
+// =====================================================
+
+let timer = 0;
+
+function animate() {
+
+    requestAnimationFrame(animate);
+
+    drawSky();
+
+    drawMeteors();
+
+    drawRoad();
+
+    cars.forEach(drawCar);
+
+    timer++;
+
+    // rohkem välku
+
+    if (timer > 70 + Math.random() * 120) {
+
+        lightning();
+
+        // vahel topeltvälk
+
+        if (Math.random() > 0.5) {
+
+            setTimeout(() => {
+                lightning();
+            }, 120);
+        }
+
+        timer = 0;
+    }
+
+    drawFlash();
+}
+
+animate();
 
 </script>
 
