@@ -1,166 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cars MP3 Player</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cars Soundtrack Player</title>
 
 <style>
+    *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+    }
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
+    body{
+        width:100vw;
+        height:100vh;
+        overflow:hidden;
+        font-family:Arial, Helvetica, sans-serif;
 
-body{
-    width:100vw;
-    height:100vh;
-    overflow:hidden;
-    font-family:Arial, Helvetica, sans-serif;
+        /* FULLSCREEN WALLPAPER */
+        background:url("index.html") center center/cover no-repeat fixed;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+    }
 
-    /* WALLPAPER */
-    background-image:url("index.jpg");
-    background-size:cover;
-    background-position:center;
-    background-repeat:no-repeat;
+    /* MP3 PLAYER IMAGE */
+    .player-wrapper{
+        position:relative;
+        width:420px;
+        max-width:90vw;
+    }
 
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
+    .player-image{
+        width:100%;
+        display:block;
+        user-select:none;
+        pointer-events:none;
+    }
 
-/* PLAYER */
-.player{
-    position:relative;
-    width:470px;
-    max-width:95vw;
-}
+    /* SCREEN AREA */
+    .screen{
+        position:absolute;
+        top:70px;
+        left:60px;
+        width:300px;
+        height:120px;
+        color:white;
+        text-align:center;
+    }
 
-/* PLAYER IMAGE */
-.player img{
-    width:100%;
-    display:block;
-    user-select:none;
-    pointer-events:none;
-}
+    .song-title{
+        font-size:22px;
+        font-weight:bold;
+        margin-top:5px;
+        text-shadow:0 0 5px black;
+    }
 
-/* SCREEN */
-.screen{
-    position:absolute;
-    top:78px;
-    left:74px;
-    width:318px;
-    height:92px;
-    padding:8px 10px;
-    color:black;
-}
+    .artist{
+        font-size:14px;
+        color:#d9d9d9;
+        margin-top:6px;
+        margin-bottom:18px;
+        text-shadow:0 0 5px black;
+    }
 
-/* SONG */
-.song{
-    font-size:16px;
-    font-weight:bold;
-    text-align:left;
-    margin-bottom:2px;
-}
+    /* PROGRESS BAR */
+    .progress-container{
+        width:100%;
+        height:10px;
+        background:rgba(255,255,255,0.2);
+        border-radius:10px;
+        overflow:hidden;
+        cursor:pointer;
+    }
 
-/* ARTIST */
-.artist{
-    font-size:13px;
-    text-align:left;
-    color:#444;
-}
+    .progress{
+        width:0%;
+        height:100%;
+        background:#00ffae;
+        transition:width 0.1s linear;
+    }
 
-/* CENTER THE LINE */
-.timeline-area{
-    position:absolute;
-    left:0;
-    top:48px;
-    width:100%;
-}
+    .time-row{
+        display:flex;
+        justify-content:space-between;
+        margin-top:8px;
+        font-size:13px;
+        color:white;
+        text-shadow:0 0 4px black;
+    }
 
-/* PROGRESS BAR */
-.progress-container{
-    width:100%;
-    height:8px;
-    background:#666;
-    border-radius:20px;
-    overflow:hidden;
-    cursor:pointer;
+    /* BUTTONS */
+    .controls{
+        position:absolute;
+        bottom:35px;
+        left:50%;
+        transform:translateX(-50%);
+        display:flex;
+        gap:18px;
+    }
 
-    box-shadow:
-        inset 2px 2px 4px rgba(0,0,0,0.7),
-        inset -1px -1px 2px rgba(255,255,255,0.2);
-}
+    .btn{
+        width:58px;
+        height:58px;
+        border-radius:50%;
+        border:none;
+        cursor:pointer;
+        background:rgba(255,255,255,0.15);
+        color:white;
+        font-size:22px;
+        backdrop-filter:blur(4px);
+        transition:0.2s;
+    }
 
-.progress{
-    width:0%;
-    height:100%;
-    background:black;
-}
+    .btn:hover{
+        transform:scale(1.08);
+        background:rgba(255,255,255,0.3);
+    }
 
-/* TIMES */
-.time-row{
-    margin-top:4px;
-    display:flex;
-    justify-content:space-between;
-    font-size:11px;
-    color:black;
-}
-
-/* REAL BUTTON HITBOXES */
-.btn{
-    position:absolute;
-    border:none;
-    background:transparent;
-    cursor:pointer;
-    border-radius:50%;
-    z-index:999;
-}
-
-/* PRESS EFFECT */
-.btn:active{
-    transform:translateY(2px);
-}
-
-/* LEFT BUTTON */
-#backBtn{
-    width:62px;
-    height:62px;
-    left:88px;
-    bottom:40px;
-}
-
-/* CENTER BUTTON */
-#playBtn{
-    width:76px;
-    height:76px;
-    left:196px;
-    bottom:34px;
-}
-
-/* RIGHT BUTTON */
-#forwardBtn{
-    width:62px;
-    height:62px;
-    right:88px;
-    bottom:40px;
-}
-
+    .btn:active{
+        transform:scale(0.95);
+    }
 </style>
 </head>
 
 <body>
 
-<div class="player">
+<div class="player-wrapper">
 
-    <!-- PLAYER IMAGE -->
-    <img src="picne.mp3player.png" alt="MP3 Player">
+    <!-- MP3 PLAYER IMAGE -->
+    <img src="picne.mp3player.png" class="player-image" alt="MP3 Player">
 
     <!-- SCREEN -->
     <div class="screen">
 
-        <div class="song">
+        <div class="song-title">
             Life is a Highway
         </div>
 
@@ -168,28 +143,36 @@ body{
             Rascal Flatts
         </div>
 
-        <!-- CENTERED TIMELINE -->
-        <div class="timeline-area">
+        <div class="progress-container" id="progressContainer">
+            <div class="progress" id="progress"></div>
+        </div>
 
-            <div class="progress-container" id="progressContainer">
-                <div class="progress" id="progress"></div>
-            </div>
-
-            <div class="time-row">
-                <span id="currentTime">0:00</span>
-                <span id="remainingTime">-0:00</span>
-            </div>
-
+        <div class="time-row">
+            <span id="currentTime">0:00</span>
+            <span id="remainingTime">-0:00</span>
         </div>
 
     </div>
 
-    <!-- BUTTON AREAS -->
-    <button class="btn" id="backBtn"></button>
+    <!-- CONTROLS -->
+    <div class="controls">
 
-    <button class="btn" id="playBtn"></button>
+        <!-- 15s BACK -->
+        <button class="btn" id="backBtn">
+            ⏪
+        </button>
 
-    <button class="btn" id="forwardBtn"></button>
+        <!-- PLAY / PAUSE -->
+        <button class="btn" id="playBtn">
+            ▶
+        </button>
+
+        <!-- 15s FORWARD -->
+        <button class="btn" id="forwardBtn">
+            ⏩
+        </button>
+
+    </div>
 
 </div>
 
@@ -199,97 +182,83 @@ body{
 </audio>
 
 <script>
+    const audio = document.getElementById("audio");
 
-const audio = document.getElementById("audio");
+    const playBtn = document.getElementById("playBtn");
+    const backBtn = document.getElementById("backBtn");
+    const forwardBtn = document.getElementById("forwardBtn");
 
-const playBtn = document.getElementById("playBtn");
-const backBtn = document.getElementById("backBtn");
-const forwardBtn = document.getElementById("forwardBtn");
+    const progress = document.getElementById("progress");
+    const progressContainer = document.getElementById("progressContainer");
 
-const progress = document.getElementById("progress");
-const progressContainer = document.getElementById("progressContainer");
+    const currentTimeEl = document.getElementById("currentTime");
+    const remainingTimeEl = document.getElementById("remainingTime");
 
-const currentTimeEl = document.getElementById("currentTime");
-const remainingTimeEl = document.getElementById("remainingTime");
+    let isPlaying = false;
 
-let isPlaying = false;
+    // FORMAT TIME
+    function formatTime(seconds){
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
 
-/* FORMAT TIME */
-function formatTime(seconds){
-
-    if(isNaN(seconds)) return "0:00";
-
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-
-    return mins + ":" + (secs < 10 ? "0" : "") + secs;
-}
-
-/* PLAY / PAUSE */
-playBtn.addEventListener("click", () => {
-
-    if(isPlaying){
-
-        audio.pause();
-
-    }else{
-
-        audio.play();
+        return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
     }
 
-    isPlaying = !isPlaying;
-});
+    // PLAY / PAUSE
+    playBtn.addEventListener("click", () => {
 
-/* BACK 15 SEC */
-backBtn.addEventListener("click", () => {
+        if(isPlaying){
+            audio.pause();
+            playBtn.innerHTML = "▶";
+        } else {
+            audio.play();
+            playBtn.innerHTML = "⏸";
+        }
 
-    audio.currentTime = Math.max(0, audio.currentTime - 15);
-});
+        isPlaying = !isPlaying;
+    });
 
-/* FORWARD 15 SEC */
-forwardBtn.addEventListener("click", () => {
+    // BACK 15 SEC
+    backBtn.addEventListener("click", () => {
+        audio.currentTime -= 15;
+    });
 
-    audio.currentTime = Math.min(
-        audio.duration,
-        audio.currentTime + 15
-    );
-});
+    // FORWARD 15 SEC
+    forwardBtn.addEventListener("click", () => {
+        audio.currentTime += 15;
+    });
 
-/* UPDATE TIMELINE */
-audio.addEventListener("timeupdate", () => {
+    // UPDATE PROGRESS
+    audio.addEventListener("timeupdate", () => {
 
-    const current = audio.currentTime;
-    const duration = audio.duration || 0;
+        const current = audio.currentTime;
+        const duration = audio.duration || 0;
 
-    const percent = (current / duration) * 100;
+        const progressPercent = (current / duration) * 100;
+        progress.style.width = progressPercent + "%";
 
-    progress.style.width = percent + "%";
+        currentTimeEl.textContent = formatTime(current);
 
-    currentTimeEl.textContent = formatTime(current);
+        const remaining = duration - current;
+        remainingTimeEl.textContent = "-" + formatTime(remaining);
 
-    const remaining = duration - current;
+    });
 
-    remainingTimeEl.textContent =
-        "-" + formatTime(remaining);
-});
+    // CLICK ON TIMELINE
+    progressContainer.addEventListener("click", (e) => {
 
-/* CLICK TIMELINE */
-progressContainer.addEventListener("click", (e) => {
+        const width = progressContainer.clientWidth;
+        const clickX = e.offsetX;
+        const duration = audio.duration;
 
-    const width = progressContainer.clientWidth;
+        audio.currentTime = (clickX / width) * duration;
+    });
 
-    const clickX = e.offsetX;
-
-    const duration = audio.duration;
-
-    audio.currentTime = (clickX / width) * duration;
-});
-
-/* SONG ENDED */
-audio.addEventListener("ended", () => {
-
-    isPlaying = false;
-});
+    // SONG ENDED
+    audio.addEventListener("ended", () => {
+        playBtn.innerHTML = "▶";
+        isPlaying = false;
+    });
 
 </script>
 
